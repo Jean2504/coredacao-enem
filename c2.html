@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plataforma de Correção ENEM</title>
+  <style>
+    body {
+      background-color: #f8f3ff;
+      color: #3b0066;
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #3b0066;
+      color: white;
+      text-align: center;
+      padding: 20px 0;
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px;
+    }
+
+    textarea {
+      width: 80%;
+      height: 200px;
+      margin-bottom: 20px;
+      border: 2px solid #3b0066;
+      border-radius: 12px;
+      padding: 10px;
+      font-size: 16px;
+      resize: none;
+      background: white;
+    }
+
+    button {
+      background-color: #3b0066;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #5c00a3;
+      transform: scale(1.05);
+    }
+
+    .resultado, .historico {
+      background-color: white;
+      width: 80%;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-top: 30px;
+      padding: 20px;
+    }
+
+    .nota {
+      font-size: 20px;
+      font-weight: bold;
+      color: #5c00a3;
+      margin-bottom: 10px;
+    }
+
+    .historico h2 {
+      margin-top: 0;
+      text-align: center;
+      color: #3b0066;
+    }
+
+    .redacao-item {
+      border-bottom: 1px solid #ccc;
+      padding: 10px 0;
+    }
+
+    .redacao-item:last-child {
+      border-bottom: none;
+    }
+
+    .competencias {
+      margin-top: 10px;
+    }
+
+    .competencia {
+      background: #f3e8ff;
+      border-left: 4px solid #3b0066;
+      padding: 8px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>Plataforma de Correção de Redações ENEM ✍️</header>
+
+  <main>
+    <textarea id="redacao" placeholder="Cole ou escreva sua redação aqui..."></textarea>
+    <button onclick="corrigirRedacao()">Corrigir Redação</button>
+
+    <div class="resultado" id="resultado"></div>
+
+    <div class="historico" id="historico">
+      <h2>📜 Histórico de Redações</h2>
+      <div id="listaHistorico"></div>
+    </div>
+  </main>
+
+  <script>
+    function corrigirRedacao() {
+      const texto = document.getElementById('redacao').value.trim();
+      const resultado = document.getElementById('resultado');
+
+      if (texto.length < 80) {
+        resultado.innerHTML = "<p>⚠️ Sua redação está muito curta! Escreva mais pra ser avaliada.</p>";
+        return;
+      }
+
+      // Simula avaliação TRI com base no texto
+      const palavras = texto.split(/\s+/).length;
+      const coerencia = texto.match(/portanto|assim|logo|então/gi) ? 200 : 150;
+      const gramatica = texto.match(/pq|vc|tb|tipo/gi) ? 100 : 200;
+      const proposta = texto.match(/educação|saúde|ambiente|sociedade/gi) ? 200 : 150;
+      const argumentacao = texto.length > 600 ? 200 : 150;
+      const conclusao = texto.match(/conclui|finalmente|em suma|portanto/gi) ? 200 : 100;
+
+      const total = coerencia + gramatica + proposta + argumentacao + conclusao;
+
+      resultado.innerHTML = `
+        <p class="nota">Nota estimada: ${total}/1000</p>
+        <div class="competencias">
+          <div class="competencia"><strong>Competência 1:</strong> Domínio da norma culta – ${gramatica}/200</div>
+          <div class="competencia"><strong>Competência 2:</strong> Compreensão da proposta – ${proposta}/200</div>
+          <div class="competencia"><strong>Competência 3:</strong> Organização das ideias – ${coerencia}/200</div>
+          <div class="competencia"><strong>Competência 4:</strong> Argumentação – ${argumentacao}/200</div>
+          <div class="competencia"><strong>Competência 5:</strong> Conclusão e proposta – ${conclusao}/200</div>
+        </div>
+        <p><strong>Dica:</strong> ${
+          total > 850 ? "Excelente! Pronto pra 1000 🔥" :
+          total > 700 ? "Tá indo bem, revise detalhes 👏" :
+          "Precisa melhorar estrutura e conexão das ideias 💪"
+        }</p>
+      `;
+
+      salvarHistorico(texto, total);
+      mostrarHistorico();
+    }
+
+    function salvarHistorico(texto, nota) {
+      const historico = JSON.parse(localStorage.getItem('redacoes')) || [];
+      historico.push({
+        texto: texto.slice(0, 100) + (texto.length > 100 ? "..." : ""),
+        nota: nota,
+        data: new Date().toLocaleString("pt-BR")
+      });
+      localStorage.setItem('redacoes', JSON.stringify(historico));
+    }
+
+    function mostrarHistorico() {
+      const lista = document.getElementById('listaHistorico');
+      const historico = JSON.parse(localStorage.getItem('redacoes')) || [];
+      lista.innerHTML = "";
+
+      if (historico.length === 0) {
+        lista.innerHTML = "<p>Nenhuma redação corrigida ainda 😅</p>";
+        return;
+      }
+
+      historico.slice().reverse().forEach((r, i) => {
+        lista.innerHTML += `
+          <div class="redacao-item">
+            <p><strong>Redação ${historico.length - i}:</strong> ${r.texto}</p>
+            <p><strong>Nota:</strong> ${r.nota}/1000 | <em>${r.data}</em></p>
+          </div>
+        `;
+      });
+    }
+
+    // Mostra histórico ao carregar
+    mostrarHistorico();
+  </script>
+
+</body>
+</html>
